@@ -1,0 +1,15 @@
+{
+  "name": "backend_project",
+  "version": "1.0.0",
+  "description": "A backend project",
+  "keywords": [
+    "javascript"
+  ],
+  "license": "ISC",
+  "author": "Aryan Verma",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
