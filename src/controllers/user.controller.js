@@ -26,7 +26,7 @@ const generateTokens = async(userId) => {
 
 
 const registerUser = asyncHandler(async(req, res) => {
-    const {username, email, password, fullname} = req.body;
+    const { username, email, password, fullname } = req.body;
     /*
         if(fullname === ""){
             throw new ApiError(400, "fullname is required...")
@@ -38,7 +38,7 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     const existedUser = await User.findOne({
-        $or: [{username}, {email}]
+        $or: [{ username }, { email }]
     })
     //console.log("Existed User", existedUser);
     
@@ -74,7 +74,7 @@ const registerUser = asyncHandler(async(req, res) => {
     });
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
-    console.log(`✅ User Registered: ${createdUser.username} (${createdUser.email})`);
+    console.log(`✅ User Registered: ${ createdUser.username } (${ createdUser.email })`);
        
     
     if(!createdUser){
@@ -88,14 +88,14 @@ const registerUser = asyncHandler(async(req, res) => {
 })
 
 const loginUser = asyncHandler(async(req, res) => {
-    const {username, email, password} = req.body;
+    const { username, email, password } = req.body;
 
     if(!(username || email)){
         throw new ApiError(400, "Username or email is required...");
     }
 
     const findUser = await User.findOne({
-        $or: [{username}, {email}]
+        $or: [{ username }, { email }]
     })
 
     if(!findUser){
@@ -115,6 +115,7 @@ const loginUser = asyncHandler(async(req, res) => {
     findUser.refreshToken = refreshToken;
 
     const loggedUser = await User.findById(findUser._id).select("-password -refreshToken");
+    console.log(`✅ User Logged In: ${ loggedUser.username } (${ loggedUser.email })`);
 
     //cookies
     const options = {
@@ -148,7 +149,7 @@ const logout = asyncHandler(async(req, res) => {
             }
         },
         {
-            returnDocument: "after"
+            new: true
         }
     )
 
@@ -180,12 +181,16 @@ const resetAccessToken = asyncHandler(async(req, res) => {
             throw new ApiError(401, "Unauthorized request...");
         }
     
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+        const user = await User.findById(decodedToken?._id);
+        //console.log("User =>", user);
+        
     
         if(!user){
             throw new ApiError(401, "Invalid Token...")
         }
-    
+        // console.log("Incoming:",incomingRefreshToken);
+        // console.log("User:",user.refreshToken);
+        
         if(incomingRefreshToken !== user.refreshToken){
             throw new ApiError(401, "Token is expired or used...")
         }
@@ -214,7 +219,7 @@ const resetAccessToken = asyncHandler(async(req, res) => {
 })
 
 const changeCurrentPassword = asyncHandler(async(req, res) => {
-    const {oldPassword, newPassword} = req.body;
+    const { oldPassword, newPassword } = req.body;
 
     const userId = req.user?._id;
 
@@ -256,7 +261,7 @@ const getCurrentUser = asyncHandler(async(req, res) => {
 const updateAccountDetails = asyncHandler(async(req, res) => {
     const updateData = {};
 
-    const {newUsername, newEmail, newFullname} = req.body;
+    const { newUsername, newEmail, newFullname } = req.body;
 
     if(newUsername){
         const existingUser = await User.findOne({
@@ -283,7 +288,7 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
             $set: updateData
         },
         {
-            returnDocument: "after"
+            new: true
         }
     ).select("-password -refreshToken");
 
@@ -326,7 +331,7 @@ const updateAvatar = asyncHandler(async(req, res) => {
             $set: updateData
         },
         {
-            returnDocument: "after"
+            new: true
         }
     ).select("-password -refreshToken")
 
@@ -372,7 +377,7 @@ const updateCoverImage = asyncHandler(async(req, res) => {
             $set: updateData
         },
         {
-            returnDocument: "after"
+            new: true
         }
     ).select("-password -refreshToken")
 
@@ -392,7 +397,7 @@ const updateCoverImage = asyncHandler(async(req, res) => {
 })
 
 const getUserChannelProfile = asyncHandler(async(req, res) => {
-    const {username} = req.params;
+    const { username } = req.params;
 
     if(!username?.trim()){
         throw new ApiError(400, "Username is missing...")
@@ -430,7 +435,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
                 },
                 isSubscribed: {
                     $cond: {
-                        if: {$in: [req?.user?._id, "$subscribers.subscriber"]},
+                        if: {$in: [new mongoose.Types.ObjectId(req?.user?._id), "$subscribers.subscriber"]},
                         then: true,
                         else: false
                     }
@@ -446,14 +451,13 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
                 isSubscribed: 1,
                 avatar: 1,
                 coverImage: 1,
-                email: 1
             }
         }
     ])
-    console.log("Channel", channel);
+    //console.log("Channel", channel);
 
     if(!channel?.length){
-        throw new ApiError(400, "Channel does not exist...")
+        throw new ApiError(404, "Channel does not exist...")
     }
 
     return res

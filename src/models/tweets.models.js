@@ -9,11 +9,19 @@ const tweetsSchema = new mongoose.Schema(
         content: {
             type: String,
             required: true
+        },
+        tweetImg:{
+            type: String
+        },
+        tweetImgPublicId:{
+            type: String
         }
     }, 
     {
-        timestamps: tru
+        timestamps: true
     }
 );
+
+
 
 export const Tweets = mongoose.model("Tweets", tweetsSchema);
